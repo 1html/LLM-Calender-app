@@ -1,11 +1,15 @@
-from flask import Flask
+from flask import Flask, redirect, request
+import os
+import requests
 
 app = Flask(__name__)
 
-CLIENT_ID = os.environ.get("274904192004-eoe4u9qbl69ln215s3q4ragu9a7b04n8.apps.googleusercontent.com") or "너의 클라이언트 ID"
-CLIENT_SECRET = os.environ.get("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") or "너의 클라이언트 Secret"
+# 환경 변수 또는 직접 입력 가능 (보안상 환경 변수 권장)
+CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID") or "너의 클라이언트 ID"
+CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET") or "너의 클라이언트 Secret"
 REDIRECT_URI = "https://llm-calender-app.onrender.com/oauth2callback"
 
+# 1. 로그인 페이지
 @app.route("/")
 def home():
     google_auth_url = (
@@ -17,13 +21,14 @@ def home():
         "&access_type=offline"
         "&prompt=consent"
     )
-    return f'<a href="{google_auth_url}">📅 Google 계정으로 로그인하기</a>'
+    return f'<a href="{google_auth_url}"> Google 계정으로 로그인하기</a>'
 
+# 2. 리디렉션 콜백 처리
 @app.route("/oauth2callback")
 def oauth_callback():
     code = request.args.get("code")
     if not code:
-        return "❌ 인증 코드가 없습니다"
+        return " 인증 코드가 없습니다"
 
     # 3. 코드로 Access Token 요청
     token_url = "https://oauth2.googleapis.com/token"
@@ -39,6 +44,6 @@ def oauth_callback():
 
     access_token = token_response.get("access_token")
     if not access_token:
-        return f"❌ 토큰 요청 실패: {token_response}"
+        return f" 토큰 요청 실패: {token_response}"
 
-    return f"✅ 인증 성공! 액세스 토큰: {access_token}"
+    return f" 인증 성공! 액세스 토큰: {access_token}"

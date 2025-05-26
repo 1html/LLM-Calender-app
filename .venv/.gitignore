@@ -1,0 +1,9 @@
+# 전부 무시
+*
+
+# 예외 처리할 파일 (필요한 파일만!)
+!.gitignore
+!app.py
+!requirements.txt
+!Procfile
+!Secret.env

@@ -1,15 +1,18 @@
-from flask import Flask, redirect, request
+from flask import Flask, redirect, request, session
+from dotenv import load_dotenv
 import os
 import requests
 
-app = Flask(__name__)
+load_dotenv()
 
-# 환경 변수 또는 직접 입력 가능 (보안상 환경 변수 권장)
-CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID") or "너의 클라이언트 ID"
-CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET") or "너의 클라이언트 Secret"
+app = Flask(__name__)
+app.secret_key = os.getenv("FLASK_SECRET_KEY") or "임시_비밀키"  # 세션 암호화용 키
+
+# 환경 변수
+CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 REDIRECT_URI = "https://llm-calender-app.onrender.com/oauth2callback"
 
-# 1. 로그인 페이지
 @app.route("/")
 def home():
     google_auth_url = (
@@ -23,14 +26,12 @@ def home():
     )
     return f'<a href="{google_auth_url}"> Google 계정으로 로그인하기</a>'
 
-# 2. 리디렉션 콜백 처리
 @app.route("/oauth2callback")
 def oauth_callback():
     code = request.args.get("code")
     if not code:
-        return " 인증 코드가 없습니다"
+        return "인증 코드가 없습니다"
 
-    # 3. 코드로 Access Token 요청
     token_url = "https://oauth2.googleapis.com/token"
     data = {
         "code": code,
@@ -44,6 +45,24 @@ def oauth_callback():
 
     access_token = token_response.get("access_token")
     if not access_token:
-        return f" 토큰 요청 실패: {token_response}"
+        return f"토큰 요청 실패: {token_response}"
 
-    return f" 인증 성공! 액세스 토큰"
+    # ✅ access_token을 Flask 세션에 저장
+    session["access_token"] = access_token
+
+    return "인증 성공! access_token이 세션에 저장되었습니다."
+
+@app.route("/calendar")
+def use_calendar():
+    access_token = session.get("access_token")
+    if not access_token:
+        return redirect("/")  # 인증 안되어 있으면 로그인 페이지로
+
+    # 예시: 캘린더 리스트 가져오기
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = requests.get("https://www.googleapis.com/calendar/v3/users/me/calendarList", headers=headers)
+    
+    if response.status_code == 200:
+        return f"캘린더 목록: {response.json()}"
+    else:
+        return f"API 요청 실패: {response.text}"

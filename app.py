@@ -2,6 +2,7 @@ from flask import Flask, redirect, request, session
 from dotenv import load_dotenv
 import os
 import requests
+import urllib.parse
 
 if os.environ.get("RENDER") != "true":
     from dotenv import load_dotenv
@@ -32,26 +33,29 @@ def home():
 def oauth_callback():
     code = request.args.get("code")
     if not code:
-        return "인증 코드 없음"
+        return "인증 코드가 없습니다."
 
     token_url = "https://oauth2.googleapis.com/token"
+
+    # 🔐 form-urlencoded 형식으로 인코딩
     headers = { "Content-Type": "application/x-www-form-urlencoded" }
-    data = {
+
+    body = urllib.parse.urlencode({
         "code": code,
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET,
         "redirect_uri": REDIRECT_URI,
         "grant_type": "authorization_code"
-    }
+    })
 
     try:
-        r = requests.post(token_url, headers=headers, data=data, timeout=10)
+        r = requests.post(token_url, headers=headers, data=body, timeout=10)
         r.raise_for_status()
         token_response = r.json()
     except requests.exceptions.RequestException as e:
         return f"""
          토큰 요청 실패<br>
-        에러: {e}<br>
+        에러: {e}<br><br>
         응답: {r.text if 'r' in locals() else '없음'}<br>
         client_id: {CLIENT_ID[:6]}...<br>
         redirect_uri: {REDIRECT_URI}
@@ -62,7 +66,7 @@ def oauth_callback():
         return f" access_token 없음: {token_response}"
 
     session["access_token"] = access_token
-    return "인증 성공!"
+    return " 인증 성공! access_token이 세션에 저장되었습니다."
 
 
 

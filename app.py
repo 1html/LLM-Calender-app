@@ -3,7 +3,9 @@ from dotenv import load_dotenv
 import os
 import requests
 
-load_dotenv("Secret.env")
+if os.environ.get("RENDER") != "true":
+    from dotenv import load_dotenv
+    load_dotenv("Secret.env")
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY") or "임시_비밀키"  # 세션 암호화용 키

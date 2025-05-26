@@ -58,7 +58,6 @@ def use_calendar():
     if not access_token:
         return redirect("/")  # 인증 안되어 있으면 로그인 페이지로
 
-    # 예시: 캘린더 리스트 가져오기
     headers = {"Authorization": f"Bearer {access_token}"}
     response = requests.get("https://www.googleapis.com/calendar/v3/users/me/calendarList", headers=headers)
     
@@ -66,3 +65,8 @@ def use_calendar():
         return f"캘린더 목록: {response.json()}"
     else:
         return f"API 요청 실패: {response.text}"
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)

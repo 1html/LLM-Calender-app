@@ -35,10 +35,10 @@ def oauth_callback():
     if not code:
         return "인증 코드가 없습니다."
 
-    print("🔍 CODE:", code)
-    print("🔍 CLIENT_ID:", CLIENT_ID)
-    print("🔍 CLIENT_SECRET:", CLIENT_SECRET)
-    print("🔍 REDIRECT_URI:", REDIRECT_URI)
+    print(" CODE:", code)
+    print(" CLIENT_ID:", CLIENT_ID)
+    print(" CLIENT_SECRET:", CLIENT_SECRET)
+    print(" REDIRECT_URI:", REDIRECT_URI)
 
     if not CLIENT_ID or not CLIENT_SECRET:
         return "환경변수가 None입니다."
@@ -85,3 +85,11 @@ def use_calendar():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
+@app.route("/debug-env")
+def debug_env():
+    return f"""
+    CLIENT_ID: {repr(os.getenv("GOOGLE_CLIENT_ID"))}<br>
+    CLIENT_SECRET: {repr(os.getenv("GOOGLE_CLIENT_SECRET"))}<br>
+    REDIRECT_URI: {repr(REDIRECT_URI)}<br>
+    """

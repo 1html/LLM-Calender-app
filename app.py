@@ -46,4 +46,4 @@ def oauth_callback():
     if not access_token:
         return f" 토큰 요청 실패: {token_response}"
 
-    return f" 인증 성공! 액세스 토큰: {access_token}"
+    return f" 인증 성공! 액세스 토큰"

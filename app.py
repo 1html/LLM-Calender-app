@@ -35,11 +35,15 @@ def oauth_callback():
     if not code:
         return "인증 코드가 없습니다."
 
-    token_url = "https://oauth2.googleapis.com/token"
+    print("🔍 CODE:", code)
+    print("🔍 CLIENT_ID:", CLIENT_ID)
+    print("🔍 CLIENT_SECRET:", CLIENT_SECRET)
+    print("🔍 REDIRECT_URI:", REDIRECT_URI)
 
-    # 🔐 form-urlencoded 형식으로 인코딩
+    if not CLIENT_ID or not CLIENT_SECRET:
+        return "환경변수가 None입니다."
+
     headers = { "Content-Type": "application/x-www-form-urlencoded" }
-
     body = urllib.parse.urlencode({
         "code": code,
         "client_id": CLIENT_ID,
@@ -49,24 +53,17 @@ def oauth_callback():
     })
 
     try:
-        r = requests.post(token_url, headers=headers, data=body, timeout=10)
+        r = requests.post("https://oauth2.googleapis.com/token", headers=headers, data=body, timeout=10)
         r.raise_for_status()
         token_response = r.json()
     except requests.exceptions.RequestException as e:
         return f"""
-         토큰 요청 실패<br>
-        에러: {e}<br><br>
-        응답: {r.text if 'r' in locals() else '없음'}<br>
-        client_id: {CLIENT_ID[:6]}...<br>
-        redirect_uri: {REDIRECT_URI}
+        토큰 요청 실패<br>
+        에러: {e}<br>
+        응답: {r.text if 'r' in locals() else '없음'}
         """
 
-    access_token = token_response.get("access_token")
-    if not access_token:
-        return f" access_token 없음: {token_response}"
-
-    session["access_token"] = access_token
-    return " 인증 성공! access_token이 세션에 저장되었습니다."
+    return f"access_token: {token_response.get('access_token')}"
 
 
 

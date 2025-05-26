@@ -1,9 +1,6 @@
 from flask import Flask, redirect, request, session
-from dotenv import load_dotenv
 import os
 import requests
-
-load_dotenv("Secret.env")
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY") or "임시_비밀키"  # 세션 암호화용 키
@@ -40,8 +37,13 @@ def oauth_callback():
         "redirect_uri": REDIRECT_URI,
         "grant_type": "authorization_code"
     }
-    r = requests.post(token_url, data=data)
-    token_response = r.json()
+
+    try:
+        r = requests.post(token_url, data=data, timeout=10)  # ⏱ timeout 추가
+        r.raise_for_status()
+        token_response = r.json()
+    except requests.exceptions.RequestException as e:
+        return f"토큰 요청 중 오류 발생: {e}"
 
     access_token = token_response.get("access_token")
     if not access_token:
@@ -59,14 +61,14 @@ def use_calendar():
         return redirect("/")  # 인증 안되어 있으면 로그인 페이지로
 
     headers = {"Authorization": f"Bearer {access_token}"}
-    response = requests.get("https://www.googleapis.com/calendar/v3/users/me/calendarList", headers=headers)
-    
-    if response.status_code == 200:
-        return f"캘린더 목록: {response.json()}"
-    else:
-        return f"API 요청 실패: {response.text}"
+    try:
+        response = requests.get("https://www.googleapis.com/calendar/v3/users/me/calendarList", headers=headers, timeout=10)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        return f"캘린더 API 요청 중 오류 발생: {e}"
 
+    return f"캘린더 목록: {response.json()}"
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
+    port = int(os.environ.get("PORT", 10000))  # Render에서는 PORT 환경변수 필요
     app.run(host="0.0.0.0", port=port)

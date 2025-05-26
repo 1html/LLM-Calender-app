@@ -32,14 +32,10 @@ def home():
 def oauth_callback():
     code = request.args.get("code")
     if not code:
-        return "인증 코드가 없습니다. 다시 로그인해주세요."
-
-    print("✅ 받은 인증 코드:", code)
-    print("✅ CLIENT_ID:", CLIENT_ID[:5] + "...")
-    print("✅ REDIRECT_URI:", REDIRECT_URI)
+        return "인증 코드 없음"
 
     token_url = "https://oauth2.googleapis.com/token"
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+    headers = { "Content-Type": "application/x-www-form-urlencoded" }
     data = {
         "code": code,
         "client_id": CLIENT_ID,
@@ -54,19 +50,20 @@ def oauth_callback():
         token_response = r.json()
     except requests.exceptions.RequestException as e:
         return f"""
-        토큰 요청 중 오류 발생!<br>
-        에러 메시지: {e}<br><br>
-        응답 내용: {r.text if 'r' in locals() else '응답 없음'}<br>
-        요청에 사용된 client_id: {CLIENT_ID[:5]}...<br>
+         토큰 요청 실패<br>
+        에러: {e}<br>
+        응답: {r.text if 'r' in locals() else '없음'}<br>
+        client_id: {CLIENT_ID[:6]}...<br>
         redirect_uri: {REDIRECT_URI}
         """
 
     access_token = token_response.get("access_token")
     if not access_token:
-        return f" access_token을 받지 못했습니다.<br>응답: {token_response}"
+        return f" access_token 없음: {token_response}"
 
     session["access_token"] = access_token
-    return " 인증 성공! access_token이 세션에 저장되었습니다."
+    return "인증 성공!"
+
 
 
 @app.route("/calendar")
